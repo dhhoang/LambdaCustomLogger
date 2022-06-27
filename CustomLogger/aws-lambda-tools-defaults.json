@@ -1,0 +1,10 @@
+﻿{
+  "profile": "default",
+  "region": "us-west-2",
+  "configuration": "Release",
+  "function-runtime": "dotnet6",
+  "function-memory-size": 256,
+  "function-timeout": 30,
+  "function-handler": "CustomLogger::CustomLogger.LambdaFunction::Get",
+  "function-architecture": "arm64"
+}
