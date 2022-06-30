@@ -13,13 +13,13 @@ internal class LambdaProxyLogger : ILogger
 
     private readonly IExternalScopeProvider _scopeProvider;
     private readonly ILambdaLogForwarder _logForwarder;
-    private readonly ILogEntryFormatter _formatter;
+    private readonly ILogHandler _handler;
     private readonly LogLevel _minLevel;
 
-    public LambdaProxyLogger(ILambdaLogForwarder logForwarder, ILogEntryFormatter formatter, IExternalScopeProvider scopeProvider, LogLevel minLevel)
+    public LambdaProxyLogger(ILambdaLogForwarder logForwarder, ILogHandler handler, IExternalScopeProvider scopeProvider, LogLevel minLevel)
     {
         _logForwarder = logForwarder;
-        _formatter = formatter;
+        _handler = handler;
         _minLevel = minLevel;
         _scopeProvider = scopeProvider;
     }
@@ -34,10 +34,8 @@ internal class LambdaProxyLogger : ILogger
         {
             return;
         }
-
-        var msgString = _formatter.FormatToString(logLevel, eventId, state, exception, formatter, _scopeProvider);
-
-        _logForwarder.Forward(logLevel, msgString);
+        var entry = new LambdaLogEntry<TState>(logLevel, eventId, state, exception, formatter);
+        _handler.Handle(entry, _logForwarder, _scopeProvider);
     }
 
     // private static AmznCore.LogLevel MsToAmznLogLevel(LogLevel msLogLevel) => msLogLevel switch

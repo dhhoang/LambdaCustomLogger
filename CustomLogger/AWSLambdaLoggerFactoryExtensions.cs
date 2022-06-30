@@ -23,8 +23,8 @@ internal static class AWSLambdaLoggerFactoryExtensions
         builder.Services.AddOptions();
         builder.Services.Configure(configureOptions);
 
-        builder.Services.AddSingleton<ILogEntryFormatter, SimpleLogEntryFormatter>();
-        builder.Services.AddSingleton<ILogEntryFormatter, JsonLogEntryFormatter>();
+        builder.Services.AddSingleton<ILogHandler, SimpleLogHandler>();
+        builder.Services.AddSingleton<ILogHandler, JsonLogEntryHandler>();
 
         builder.Services.AddSingleton<ILambdaLogForwarder>(sp =>
         {
@@ -35,7 +35,7 @@ internal static class AWSLambdaLoggerFactoryExtensions
             }
             catch
             {
-                return new StdoutLambdaLogForwarder();
+                return new Utf8StdoutLambdaLogForwarder();
             }
         });
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, LambdaLoggerProvider>());

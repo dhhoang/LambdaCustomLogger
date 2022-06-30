@@ -38,7 +38,7 @@ internal class TelemetryFdLogFowarder : ILambdaLogForwarder, IDisposable
         _fileStream = new FileStream(_fd, FileAccess.Write, BufferSizeNoBuffer, isAsync: false);
     }
 
-    public void Forward(LogLevel logLevel, string entry)
+    public void Forward(string entry)
     {
         var utf8Size = Encoding.UTF8.GetByteCount(entry);
 
@@ -63,6 +63,20 @@ internal class TelemetryFdLogFowarder : ILambdaLogForwarder, IDisposable
         finally
         {
             ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    public void Forward(ReadOnlySpan<byte> data)
+    {
+        Span<byte> frameHeader = stackalloc byte[8];
+        BinaryPrimitives.WriteUInt32BigEndian(frameHeader[..4], LambdaTelemetryLogHeaderFrameType);
+        BinaryPrimitives.WriteInt32BigEndian(frameHeader.Slice(4, 4), data.Length);
+
+        lock (_fileStream)
+        {
+            _fileStream.Write(frameHeader);
+            _fileStream.Write(data);
+            _fileStream.Flush();
         }
     }
 

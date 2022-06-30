@@ -1,61 +1,58 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
 namespace CustomLogger;
 
-public class JsonLogEntryFormatter : ILogEntryFormatter
+public class JsonLogEntryHandler : ILogHandler
 {
-    public string Name => LambdaLoggerOptions.JsonFormatter;
+    public string Name => LambdaLoggerOptions.JsonHandler;
 
-    public string FormatToString<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
-        Func<TState, Exception?, string> messageFormatter, IExternalScopeProvider scopeProvider)
+    public void Handle<TState>(in LambdaLogEntry<TState> entry, ILambdaLogForwarder forwarder, IExternalScopeProvider scopeProvider)
     {
-        var msg = messageFormatter(state, exception);
-
-        if (state is IReadOnlyCollection<KeyValuePair<string, object>> logProperties)
+        var output = new ArrayBufferWriter<byte>(1024);
+        using var writer = new Utf8JsonWriter(output, new JsonWriterOptions
         {
-            var output = new ArrayBufferWriter<byte>(1024);
-            using var writer = new Utf8JsonWriter(output, new JsonWriterOptions
-            {
-                Indented = false
-            });
+            Indented = false
+        });
 
-            writer.WriteStartObject();
+        writer.WriteStartObject();
 
-            writer.WriteString("_formattedMessage", msg);
+        // write formatted message
+        writer.WriteString("_formattedMessage", entry.Formatter(entry.State, entry.Exception));
 
-            // write scopes 
-            writer.WriteStartArray("_scopes");
+        // write scopes 
+        writer.WriteStartArray("_scopes");
 
-            scopeProvider.ForEachScope(
-                (o, w) => w.WriteStringValue(ToInvariantString(o)),
-                writer);
+        scopeProvider.ForEachScope(
+            (o, w) => w.WriteStringValue(ToInvariantString(o)),
+            writer);
 
-            writer.WriteEndArray();
+        writer.WriteEndArray();
 
-            if (exception is not null)
-            {
-                writer.WriteString(nameof(Exception), exception.ToString());
-            }
+        // write exception
+        if (entry.Exception is Exception entryException)
+        {
+            writer.WriteString(nameof(Exception), entryException.ToString());
+        }
 
+        // write state properties
+        if (entry.State is IReadOnlyCollection<KeyValuePair<string, object>> logProperties)
+        {
             foreach (var s in logProperties)
             {
                 WriteItem(writer, s);
             }
-
-            writer.WriteEndObject();
-
-            writer.Flush();
-            return Encoding.UTF8.GetString(output.WrittenMemory.Span);
         }
 
-        return JsonSerializer.Serialize(msg);
+        writer.WriteEndObject();
+        writer.Flush();
+
+        forwarder.Forward(output.WrittenMemory.Span);
     }
 
     private static void WriteItem(Utf8JsonWriter writer, KeyValuePair<string, object> item)

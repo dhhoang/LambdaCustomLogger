@@ -1,13 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
 namespace CustomLogger;
 
-internal interface ILambdaLogForwarder
+public interface ILambdaLogForwarder
 {
-    void Forward(LogLevel logLevel, string entry);
+    void Forward(string entry);
+
+    void Forward(ReadOnlySpan<byte> data);
 }

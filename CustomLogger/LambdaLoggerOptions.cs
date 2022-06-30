@@ -4,11 +4,11 @@ namespace CustomLogger;
 
 internal class LambdaLoggerOptions : IOptions<LambdaLoggerOptions>
 {
-    public const string SimpleFormatter = "Simple";
+    public const string SimpleHandler = "Simple";
 
-    public const string JsonFormatter = "JSON";
+    public const string JsonHandler = "JSON";
 
     public LambdaLoggerOptions Value => this;
 
-    public string FormatterName { get; set; } = SimpleFormatter;
+    public string HandlerName { get; set; } = SimpleHandler;
 }
