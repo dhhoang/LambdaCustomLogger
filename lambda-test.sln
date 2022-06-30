@@ -5,8 +5,6 @@ VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomLogger", "CustomLogger\CustomLogger.csproj", "{4C36155F-6384-47EB-9801-1209E8EC07F5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomLoggerTests", "CustomLoggerTests\CustomLoggerTests.csproj", "{0F74F7F2-F62B-4AE4-8674-C88E94FE38F9}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{07000A25-859A-4795-9BE0-F138B9D7B200}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
@@ -22,10 +20,6 @@ Global
 		{4C36155F-6384-47EB-9801-1209E8EC07F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4C36155F-6384-47EB-9801-1209E8EC07F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4C36155F-6384-47EB-9801-1209E8EC07F5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0F74F7F2-F62B-4AE4-8674-C88E94FE38F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0F74F7F2-F62B-4AE4-8674-C88E94FE38F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0F74F7F2-F62B-4AE4-8674-C88E94FE38F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0F74F7F2-F62B-4AE4-8674-C88E94FE38F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

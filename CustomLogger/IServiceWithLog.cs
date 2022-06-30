@@ -21,10 +21,7 @@ internal class ServiceWithLog : IServiceWithLog
 {
     private readonly ILogger<ServiceWithLog> _logger;
 
-    public ServiceWithLog(ILogger<ServiceWithLog> logger)
-    {
-        _logger = logger;
-    }
+    public ServiceWithLog(ILogger<ServiceWithLog> logger) => _logger = logger;
 
     public void LogExceptionThrown()
     {
@@ -47,15 +44,12 @@ internal class ServiceWithLog : IServiceWithLog
         }
 
 #pragma warning disable CA2254 // Template should be a static expression
+        // ReSharper disable once TemplateIsNotCompileTimeConstantProblem
         _logger.LogInformation(sb.ToString());
 #pragma warning restore CA2254 // Template should be a static expression
-
     }
 
-    public void LogSingleLine()
-    {
-        _logger.LogWarning("Single line from {ServiceName}", nameof(ServiceWithLog));
-    }
+    public void LogSingleLine() => _logger.LogWarning("Single line from {ServiceName}", nameof(ServiceWithLog));
 
     public async Task LogWithAsyncScopes(params object[] scopes)
     {
