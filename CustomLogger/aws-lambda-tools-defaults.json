@@ -2,8 +2,9 @@
   "profile": "default",
   "region": "us-west-2",
   "configuration": "Release",
+  "function-name": "CustomLogger",
   "function-runtime": "dotnet6",
-  "function-memory-size": 256,
+  "function-memory-size": 1024,
   "function-timeout": 30,
   "function-handler": "CustomLogger::CustomLogger.LambdaFunction::Get",
   "function-architecture": "arm64"

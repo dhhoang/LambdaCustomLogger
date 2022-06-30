@@ -5,7 +5,7 @@ namespace CustomLoggerTests;
 [TestClass]
 public class LambdaFunctionTests
 {
-    private static AsyncLocal<string> _asyncLocalString = new AsyncLocal<string>();
+    private readonly AsyncLocal<string> _asyncLocalString = new AsyncLocal<string>();
 
     [TestMethod]
     public void Outer()

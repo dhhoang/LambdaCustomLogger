@@ -1,27 +1,45 @@
-﻿//using Microsoft.Extensions.DependencyInjection;
-//using Microsoft.Extensions.DependencyInjection.Extensions;
-//using Microsoft.Extensions.Logging;
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Text;
-//using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Globalization;
 
-//namespace CustomLogger;
+namespace CustomLogger;
 
-//internal static class AWSLambdaLoggerFactoryExtensions
-//{
-//    /// <summary>
-//    /// Adds an event logger named 'EventLog' to the factory.
-//    /// </summary>
-//    /// <param name="builder">The extension method argument.</param>
-//    /// <returns>The <see cref="ILoggingBuilder"/> so that additional calls can be chained.</returns>
-//    public static ILoggingBuilder AddEventLog(this ILoggingBuilder builder)
-//    {
-//        ArgumentNullException.ThrowIfNull(builder);
+internal static class AWSLambdaLoggerFactoryExtensions
+{
+    private const string EnvironmentVariableTelemetryLogFd = "_LAMBDA_TELEMETRY_LOG_FD";
 
-//        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, LambdaLoggerProvider>());
+    /// <summary>
+    /// Adds an event logger named 'EventLog' to the factory.
+    /// </summary>
+    /// <param name="builder">The extension method argument.</param>
+    /// <param name="configureOptions">Configure logging options.</param>
+    /// <returns>The <see cref="ILoggingBuilder"/> so that additional calls can be chained.</returns>
+    public static ILoggingBuilder AddLambdaProxyLogger(this ILoggingBuilder builder, Action<LambdaLoggerOptions> configureOptions)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
 
-//        return builder;
-//    }
-//}
+        builder.Services.AddOptions();
+        builder.Services.Configure(configureOptions);
+
+        builder.Services.AddSingleton<ILogEntryFormatter, SimpleLogEntryFormatter>();
+        builder.Services.AddSingleton<ILogEntryFormatter, JsonLogEntryFormatter>();
+
+        builder.Services.AddSingleton<ILambdaLogForwarder>(sp =>
+        {
+            try
+            {
+                return new TelemetryFdLogFowarder(int.Parse(Environment.GetEnvironmentVariable(EnvironmentVariableTelemetryLogFd) ?? string.Empty,
+                    CultureInfo.InvariantCulture));
+            }
+            catch
+            {
+                return new StdoutLambdaLogForwarder();
+            }
+        });
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, LambdaLoggerProvider>());
+
+        return builder;
+    }
+}
