@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using CustomLogger.Emf;
 using Microsoft.Extensions.Logging;
 
 namespace CustomLogger;
@@ -13,6 +14,19 @@ public class JsonLogEntryHandler : ILogHandler
     public string Name => LambdaLoggerOptions.JsonHandler;
 
     public void Handle<TState>(in LambdaLogEntry<TState> entry, ILambdaLogForwarder forwarder, IExternalScopeProvider scopeProvider)
+    {
+        switch (entry.State)
+        {
+            case EmfLogState emfLogState:
+                LogEmf(emfLogState, forwarder);
+                return;
+            default:
+                LogStructured(entry, forwarder, scopeProvider);
+                break;
+        }
+    }
+
+    private static void LogStructured<TState>(in LambdaLogEntry<TState> entry, ILambdaLogForwarder forwarder, IExternalScopeProvider scopeProvider)
     {
         var output = new ArrayBufferWriter<byte>(1024);
         using var writer = new Utf8JsonWriter(output, new JsonWriterOptions
@@ -47,6 +61,72 @@ public class JsonLogEntryHandler : ILogHandler
             {
                 WriteItem(writer, s);
             }
+        }
+
+        writer.WriteEndObject();
+        writer.Flush();
+
+        forwarder.Forward(output.WrittenMemory.Span);
+    }
+
+    private static void LogEmf(EmfLogState state, ILambdaLogForwarder forwarder)
+    {
+        var output = new ArrayBufferWriter<byte>(1024);
+        using var writer = new Utf8JsonWriter(output, new JsonWriterOptions
+        {
+            Indented = false
+        });
+
+        writer.WriteStartObject();
+
+        writer.WriteStartObject("_aws");
+
+        writer.WriteNumber("Timestamp", state.MetricMetadata.Timestamp.ToUnixTimeMilliseconds());
+
+        writer.WriteStartArray("CloudWatchMetrics");
+
+        foreach (var metricDirective in state.MetricMetadata.CloudWatchMetrics)
+        {
+            writer.WriteStartObject();
+
+            writer.WriteString("Namespace", metricDirective.Namespace);
+
+            writer.WriteStartArray("Dimensions");
+            foreach (var dimensionSet in metricDirective.Dimensions)
+            {
+                writer.WriteStartArray();
+                foreach (var dimension in dimensionSet.Values)
+                {
+                    writer.WriteStringValue(dimension);
+                }
+
+                writer.WriteEndArray();
+            }
+
+            writer.WriteEndArray(); // Dimensions
+
+            writer.WriteStartArray("Metrics");
+            foreach (var metricDefinition in metricDirective.Metrics)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("Name", metricDefinition.Name);
+                writer.WriteString("Unit", metricDefinition.Unit);
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray(); // Metrics
+
+            writer.WriteEndObject();
+        }
+
+        writer.WriteEndArray(); // CloudWatchMetrics
+
+        writer.WriteEndObject(); // _aws
+
+        // write the state data
+        foreach (var stateKvp in state.Data)
+        {
+            WriteItem(writer, stateKvp);
         }
 
         writer.WriteEndObject();

@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
+using CustomLogger.Emf;
 using Microsoft.Extensions.Logging;
 
 namespace CustomLogger;
@@ -15,6 +17,8 @@ internal interface IServiceWithLog
     void LogExceptionThrown();
 
     Task LogWithAsyncScopes(params object[] scopes);
+
+    void LogEmfMetric();
 }
 
 internal class ServiceWithLog : IServiceWithLog
@@ -73,5 +77,25 @@ internal class ServiceWithLog : IServiceWithLog
                 d?.Dispose();
             }
         }
+    }
+
+    public void LogEmfMetric()
+    {
+        var metricMetadata = new MetricMetadata();
+        var directive = new MetricDirective("custom-logger-metric");
+        var dimensionSet = new DimensionSet();
+        dimensionSet.Values.Add("functionVersion");
+        directive.Dimensions.Add(dimensionSet);
+
+        var metric = new MetricDefinition("time", "Milliseconds");
+        directive.Metrics.Add(metric);
+
+        metricMetadata.CloudWatchMetrics.Add(directive);
+        _logger.LogEmf(metricMetadata, new Dictionary<string, object>
+        {
+            ["functionVersion"] = "$LATEST",
+            ["time"] = 100,
+            ["requestId"] = "989ffbf8-9ace-4817-a57c-e4dd734019ee"
+        });
     }
 }

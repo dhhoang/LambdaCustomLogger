@@ -3,7 +3,6 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.IO;
 using System.Text;
-using Microsoft.Extensions.Logging;
 using Microsoft.Win32.SafeHandles;
 
 namespace CustomLogger;
@@ -34,7 +33,7 @@ internal class TelemetryFdLogFowarder : ILambdaLogForwarder, IDisposable
 
     public TelemetryFdLogFowarder(int fileDescriptor)
     {
-        _fd = new SafeFileHandle(new IntPtr(fileDescriptor), true);
+        _fd = new SafeFileHandle(new IntPtr(fileDescriptor), false);
         _fileStream = new FileStream(_fd, FileAccess.Write, BufferSizeNoBuffer, isAsync: false);
     }
 

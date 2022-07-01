@@ -5,7 +5,6 @@ using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using Microsoft.Extensions.Logging;
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading;
@@ -38,7 +37,7 @@ public class LambdaFunction
 
         services.AddLogging(b => b.AddLambdaProxyLogger(opts =>
         {
-            opts.HandlerName = LambdaLoggerOptions.SimpleHandler;
+            opts.HandlerName = LambdaLoggerOptions.JsonHandler;
         }));
         _globalServices = services.BuildServiceProvider();
     }
@@ -54,14 +53,14 @@ public class LambdaFunction
         await using var requestServiceScope = _globalServices.CreateAsyncScope();
         var provider = requestServiceScope.ServiceProvider;
 
-        var logger = provider.GetRequiredService<ILogger<LambdaFunction>>();
-
         var serviceWithLog = provider.GetRequiredService<IServiceWithLog>();
         serviceWithLog.LogSingleLine();
         serviceWithLog.LogMultiLine(3);
 
         await serviceWithLog.LogWithAsyncScopes(context.InvokedFunctionArn, context.AwsRequestId);
         serviceWithLog.LogExceptionThrown();
+
+        serviceWithLog.LogEmfMetric();
 
         var response = new APIGatewayHttpApiV2ProxyResponse
         {
