@@ -6,12 +6,15 @@ using System.Globalization;
 
 namespace CustomLogger;
 
-internal static class AWSLambdaLoggerFactoryExtensions
+/// <summary>
+/// Provides method for adding Lambda log provider.
+/// </summary>
+public static class AWSLambdaLoggerFactoryExtensions
 {
     private const string EnvironmentVariableTelemetryLogFd = "_LAMBDA_TELEMETRY_LOG_FD";
 
     /// <summary>
-    /// Adds an event logger named 'EventLog' to the factory.
+    /// Adds the Lambda Log provider to the builder.
     /// </summary>
     /// <param name="builder">The extension method argument.</param>
     /// <param name="configureOptions">Configure logging options.</param>
@@ -26,16 +29,17 @@ internal static class AWSLambdaLoggerFactoryExtensions
         builder.Services.AddSingleton<ILogHandler, SimpleLogHandler>();
         builder.Services.AddSingleton<ILogHandler, JsonLogEntryHandler>();
 
-        builder.Services.AddSingleton<ILambdaLogForwarder>(sp =>
+        builder.Services.AddSingleton<ILambdaLogForwarder>(_ =>
         {
             try
             {
                 return new TelemetryFdLogFowarder(int.Parse(Environment.GetEnvironmentVariable(EnvironmentVariableTelemetryLogFd) ?? string.Empty,
                     CultureInfo.InvariantCulture));
             }
-            catch
+            catch (Exception ex)
             {
-                return new Utf8StdoutLambdaLogForwarder();
+                Console.Error.WriteLine("Fallback to stdout due to error {0}", ex);
+                return new Utf8ConsoleLambdaLogForwarder(Console.Out.WriteLine);
             }
         });
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, LambdaLoggerProvider>());

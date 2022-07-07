@@ -251,6 +251,9 @@ dotnet_diagnostic.ide0021.severity = suggestion
 # IDE0058: Expression value is never used
 dotnet_diagnostic.ide0058.severity = none
 
+# CS1591: Missing XML comment for publicly visible type or member
+dotnet_diagnostic.CS1591.severity = error
+
 [*]
 spaces_around_brackets = inside
 ###############################
@@ -293,6 +296,9 @@ end_of_line = crlf
 
 # Microsoft .NET properties
 csharp_new_line_before_members_in_object_initializers = false
+
+# Default severity for analyzer diagnostics with category 'Maintainability'
+dotnet_analyzer_diagnostic.category-Maintainability.severity = suggestion
 
 [*.vb]
 # Modifier preferences

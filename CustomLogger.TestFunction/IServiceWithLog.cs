@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
-using CustomLogger.Emf;
 using Microsoft.Extensions.Logging;
 
 namespace CustomLogger;
@@ -24,6 +23,12 @@ internal interface IServiceWithLog
 internal class ServiceWithLog : IServiceWithLog
 {
     private readonly ILogger<ServiceWithLog> _logger;
+
+    private readonly Dictionary<string, string> _emfDimensions = new Dictionary<string, string>
+    {
+        ["functionVersion"] = "$LATEST",
+        ["requestId"] = "989ffbf8-9ace-4817-a57c-e4dd734019ee"
+    };
 
     public ServiceWithLog(ILogger<ServiceWithLog> logger) => _logger = logger;
 
@@ -47,10 +52,7 @@ internal class ServiceWithLog : IServiceWithLog
             sb.AppendFormat(CultureInfo.InvariantCulture, "Line {0} from ServiceWithLog", i).AppendLine();
         }
 
-#pragma warning disable CA2254 // Template should be a static expression
-        // ReSharper disable once TemplateIsNotCompileTimeConstantProblem
-        _logger.LogInformation(sb.ToString());
-#pragma warning restore CA2254 // Template should be a static expression
+        _logger.LogInformation("{Message}", sb.ToString());
     }
 
     public void LogSingleLine() => _logger.LogWarning("Single line from {ServiceName}", nameof(ServiceWithLog));
@@ -81,21 +83,9 @@ internal class ServiceWithLog : IServiceWithLog
 
     public void LogEmfMetric()
     {
-        var metricMetadata = new MetricMetadata();
-        var directive = new MetricDirective("custom-logger-metric");
-        var dimensionSet = new DimensionSet();
-        dimensionSet.Values.Add("functionVersion");
-        directive.Dimensions.Add(dimensionSet);
+        using var emfScope = _logger.BeginEmf("custom-logger-metric", _emfDimensions);
 
-        var metric = new MetricDefinition("time", "Milliseconds");
-        directive.Metrics.Add(metric);
-
-        metricMetadata.CloudWatchMetrics.Add(directive);
-        _logger.LogEmf(metricMetadata, new Dictionary<string, object>
-        {
-            ["functionVersion"] = "$LATEST",
-            ["time"] = 100,
-            ["requestId"] = "989ffbf8-9ace-4817-a57c-e4dd734019ee"
-        });
+        emfScope.PutMetric("time", "Milliseconds", 100, _emfDimensions.Keys);
+        emfScope.PutMetric("time2", "Milliseconds", 200, _emfDimensions.Keys);
     }
 }

@@ -1,31 +1,25 @@
-using System.Net;
-using System.Text.Json.Serialization;
 using Amazon.Lambda.Core;
-using Amazon.Lambda.APIGatewayEvents;
-using Amazon.Lambda.Serialization.SystemTextJson;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using System;
 using Microsoft.Extensions.DependencyInjection;
-using System.Threading;
 using System.Text;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Globalization;
+using System.IO;
 
-[assembly: LambdaSerializer(typeof(SourceGeneratorLambdaJsonSerializer<CustomLogger.HttpApiJsonSerializerContext>))]
+//[assembly: LambdaSerializer(typeof(SourceGeneratorLambdaJsonSerializer<CustomLogger.HttpApiJsonSerializerContext>))]
 
-namespace CustomLogger;
+namespace CustomLogger.TestFunction;
 
-[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest))]
-[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyResponse))]
-public partial class HttpApiJsonSerializerContext : JsonSerializerContext
-{
-}
+//[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest))]
+//[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyResponse))]
+//public partial class HttpApiJsonSerializerContext : JsonSerializerContext
+//{
+//}
 
 public class LambdaFunction
 {
-    private readonly AsyncLocal<ILambdaLogger> _lambdaLoggerStorage = new AsyncLocal<ILambdaLogger>();
     private readonly IServiceProvider _globalServices;
 
     public LambdaFunction()
@@ -43,12 +37,10 @@ public class LambdaFunction
     }
 
 #pragma warning disable IDE0060 // Remove unused parameter
-    public async Task<APIGatewayHttpApiV2ProxyResponse> Get(APIGatewayHttpApiV2ProxyRequest request, ILambdaContext context)
+    public async Task<Stream> Get(Stream request, ILambdaContext context)
 #pragma warning restore IDE0060 // Remove unused parameter
     {
-        _lambdaLoggerStorage.Value = context.Logger;
-
-        LogUsingLambdaLogger(context.Logger);
+        //LogUsingLambdaLogger(context.Logger);
 
         await using var requestServiceScope = _globalServices.CreateAsyncScope();
         var provider = requestServiceScope.ServiceProvider;
@@ -62,14 +54,8 @@ public class LambdaFunction
 
         serviceWithLog.LogEmfMetric();
 
-        var response = new APIGatewayHttpApiV2ProxyResponse
-        {
-            StatusCode = (int)HttpStatusCode.OK,
-            Body = "Hello AWS Serverless",
-            Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
-        };
 
-        return response;
+        return Stream.Null;
     }
 
     private static void LogUsingLambdaLogger(ILambdaLogger lambdaLogger)
@@ -82,7 +68,7 @@ public class LambdaFunction
         }
         catch (Exception ex)
         {
-            lambdaLogger.LogError("Exception log from Lambda " + ex.ToString());
+            lambdaLogger.LogError("Exception log from Lambda " + ex);
         }
     }
 

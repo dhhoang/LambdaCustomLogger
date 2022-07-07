@@ -4,8 +4,8 @@
   "configuration": "Release",
   "function-name": "CustomLogger",
   "function-runtime": "dotnet6",
-  "function-memory-size": 1024,
+  "function-memory-size": 256,
   "function-timeout": 30,
-  "function-handler": "CustomLogger::CustomLogger.LambdaFunction::Get",
+  "function-handler": "CustomLogger.TestFunction::CustomLogger.LambdaFunction::Get",
   "function-architecture": "arm64"
 }

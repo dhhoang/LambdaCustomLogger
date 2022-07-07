@@ -9,11 +9,11 @@ using Microsoft.Extensions.Logging;
 
 namespace CustomLogger;
 
-public class JsonLogEntryHandler : ILogHandler
+internal class JsonLogEntryHandler : ILogHandler
 {
     public string Name => LambdaLoggerOptions.JsonHandler;
 
-    public void Handle<TState>(in LambdaLogEntry<TState> entry, ILambdaLogForwarder forwarder, IExternalScopeProvider scopeProvider)
+    public void Handle<TState>(in LambdaLogEntry<TState> entry, ILambdaLogForwarder forwarder, IExternalScopeProvider? scopeProvider)
     {
         switch (entry.State)
         {
@@ -26,9 +26,9 @@ public class JsonLogEntryHandler : ILogHandler
         }
     }
 
-    private static void LogStructured<TState>(in LambdaLogEntry<TState> entry, ILambdaLogForwarder forwarder, IExternalScopeProvider scopeProvider)
+    private static void LogStructured<TState>(in LambdaLogEntry<TState> entry, ILambdaLogForwarder forwarder, IExternalScopeProvider? scopeProvider)
     {
-        var output = new ArrayBufferWriter<byte>(1024);
+        var output = new MemoryPoolBufferWriter(MemoryPool<byte>.Shared, 1024);
         using var writer = new Utf8JsonWriter(output, new JsonWriterOptions
         {
             Indented = false
@@ -42,7 +42,7 @@ public class JsonLogEntryHandler : ILogHandler
         // write scopes 
         writer.WriteStartArray("_scopes");
 
-        scopeProvider.ForEachScope(
+        scopeProvider?.ForEachScope(
             (o, w) => w.WriteStringValue(ToInvariantString(o)),
             writer);
 
@@ -71,7 +71,10 @@ public class JsonLogEntryHandler : ILogHandler
 
     private static void LogEmf(EmfLogState state, ILambdaLogForwarder forwarder)
     {
-        var output = new ArrayBufferWriter<byte>(1024);
+        // use 255 KiB here to to safe
+        const int cwMaxEventSize = 255 * 1024;
+
+        var output = new MemoryPoolBufferWriter(MemoryPool<byte>.Shared, 1024);
         using var writer = new Utf8JsonWriter(output, new JsonWriterOptions
         {
             Indented = false
@@ -131,6 +134,11 @@ public class JsonLogEntryHandler : ILogHandler
 
         writer.WriteEndObject();
         writer.Flush();
+
+        if (output.WrittenMemory.Length > cwMaxEventSize)
+        {
+            throw new OversizedLogException(output.WrittenMemory.Length);
+        }
 
         forwarder.Forward(output.WrittenMemory.Span);
     }

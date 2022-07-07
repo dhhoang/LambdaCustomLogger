@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <DebugType>None</DebugType>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <AWSProjectType>Lambda</AWSProjectType>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.4.1" />
+    <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
+    <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.3.0" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.9.19" />
+    <PackageReference Include="AWSXRayRecorder.Core" Version="2.10.1" />
+    <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.8.3" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\CustomLogger\CustomLogger.csproj" />
+  </ItemGroup>
+</Project>

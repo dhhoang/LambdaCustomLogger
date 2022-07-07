@@ -7,10 +7,10 @@ internal class SimpleLogHandler : ILogHandler
 {
     public string Name => LambdaLoggerOptions.SimpleHandler;
 
-    public void Handle<TState>(in LambdaLogEntry<TState> entry, ILambdaLogForwarder forwarder, IExternalScopeProvider scopeProvider)
+    public void Handle<TState>(in LambdaLogEntry<TState> entry, ILambdaLogForwarder forwarder, IExternalScopeProvider? scopeProvider)
     {
         var scopeBuilder = new StringBuilder();
-        scopeProvider.ForEachScope(
+        scopeProvider?.ForEachScope(
             (o, s) =>
             {
                 s.Append('<').Append(o).Append('>');
@@ -19,6 +19,7 @@ internal class SimpleLogHandler : ILogHandler
 
         var scope = scopeBuilder.ToString();
         var formattedMessage = entry.Formatter(entry.State, entry.Exception);
+
         forwarder.Forward($"[{entry.Level}] {scope} {formattedMessage} {entry.Exception}");
     }
 }
