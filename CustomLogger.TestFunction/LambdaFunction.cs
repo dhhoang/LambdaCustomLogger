@@ -58,7 +58,9 @@ public class LambdaFunction
         return Stream.Null;
     }
 
+#pragma warning disable IDE0051 // Remove unused private members
     private static void LogUsingLambdaLogger(ILambdaLogger lambdaLogger)
+#pragma warning restore IDE0051 // Remove unused private members
     {
         lambdaLogger.LogInformation(GetMultiLineRecord("Lambda", 3));
 

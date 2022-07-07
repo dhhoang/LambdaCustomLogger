@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.Diagnostics;
 
 namespace CustomLogger;
 
-public sealed class MemoryPoolBufferWriter : IBufferWriter<byte>, IDisposable
+internal sealed class MemoryPoolBufferWriter : IBufferWriter<byte>, IDisposable
 {
     private readonly MemoryPool<byte> _memoryPool;
     private IMemoryOwner<byte> _rentedMemory;
